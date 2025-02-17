@@ -116,20 +116,24 @@ namespace AntiDLL
                 }
 
                 // Если игрок нарушил `DetectionThreshold` раз, применяем наказание
-                if (count >= DetectionThreshold)
+                if (count < DetectionThreshold) continue;
+                if (OnDetection != null)
                 {
-                    if (OnDetection != null)
+                    Server.NextWorldUpdate(() =>
                     {
                         OnDetection.Invoke(player, "Multiple detections");
-                    }
-                    else
+                    });
+                }
+                else
+                {
+                    Server.NextWorldUpdate(() =>
                     {
                         base.Logger.LogInformation("Kicking player {0} for blacklisted event listener after {1} detections.", player.PlayerName, count);
                         player.Disconnect(NetworkDisconnectionReason.NETWORK_DISCONNECT_KICKED_UNTRUSTEDACCOUNT);
-                    }
-
-                    detectedPlayers.TryRemove(player, out _); // Удаляем игрока из списка нарушителей
+                    });
                 }
+
+                detectedPlayers.TryRemove(player, out _); // Удаляем игрока из списка нарушителей
             }
         }
 
